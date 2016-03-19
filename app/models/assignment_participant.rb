@@ -225,33 +225,35 @@ class AssignmentParticipant < Participant
   # Appends the hyperlink to a list that is stored in YAML format in the DB
   # @exception  If is hyperlink was already there
   #             If it is an invalid URL
-  def submit_hyperlink(hyperlink)
-    hyperlink.strip!
-    raise "The hyperlink cannot be empty" if hyperlink.empty?
-    url = URI.parse(hyperlink)
-    # If not a valid URL, it will throw an exception
-    Net::HTTP.start(url.host, url.port)
-    hyperlinks = self.hyperlinks_array
-    hyperlinks << hyperlink
-    team_object = self.team
-    team_object.submitted_hyperlinks = YAML::dump(hyperlinks)
-    team_object.save
-  end
+  # def submit_hyperlink(hyperlink)
+  #   hyperlink.strip!
+  #   raise "The hyperlink cannot be empty" if hyperlink.empty?
+  #   url = URI.parse(hyperlink)
+  #   # If not a valid URL, it will throw an exception
+  #   Net::HTTP.start(url.host, url.port)
+  #   hyperlinks = self.hyperlinks_array
+  #   hyperlinks << hyperlink
+  #   team_object = self.team
+  #   team_object.submitted_hyperlinks = YAML::dump(hyperlinks)
+  #   team_object.save
+  # end
+  #
+  # # Note: This method is not used yet. It is here in the case it will be needed.
+  # # @exception  If the index does not exist in the array
+  # def remove_hyperlink(hyperlink_to_delete)
+  #   hyperlinks = self.hyperlinks_array
+  #   hyperlinks.delete(hyperlink_to_delete)
+  #   team_object = self.team
+  #   team_object.submitted_hyperlinks = YAML::dump(hyperlinks)
+  #   team_object.save
+  # end
 
-  # Note: This method is not used yet. It is here in the case it will be needed.
-  # @exception  If the index does not exist in the array
-  def remove_hyperlink(hyperlink_to_delete)
-    hyperlinks = self.hyperlinks_array
-    hyperlinks.delete(hyperlink_to_delete)
-    team_object = self.team
-    team_object.submitted_hyperlinks = YAML::dump(hyperlinks)
-    team_object.save
-  end
+   def hyperlinks
+   team.try(:hyperlinks) || []
+   end
+  # end
 
-  def hyperlinks
-    team.try(:hyperlinks) || []
-  end
- 
+  # need to move this to assignment_team.rb
   def hyperlinks_array
     self.team.submitted_hyperlinks.blank? ? [] : YAML::load(self.team.submitted_hyperlinks)
   end
@@ -364,12 +366,12 @@ class AssignmentParticipant < Participant
     end
 
     # verify the digital signature is valid
-    def verify_digital_signature(private_key)
+  def verify_digital_signature(private_key)
       user.public_key == OpenSSL::PKey::RSA.new(private_key).public_key.to_pem
-    end
+  end
 
     #define a handle for a new participant
-    def set_handle
+  def set_handle
       if self.user.handle == nil or self.user.handle == ""
         self.handle = self.user.name
       elsif AssignmentParticipant.where(parent_id: self.assignment.id, handle: self.user.handle).length > 0
