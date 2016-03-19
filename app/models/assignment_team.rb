@@ -105,6 +105,11 @@ class AssignmentTeam < Team
     'ReviewResponseMap'
   end
 
+  def hyperlinks
+    ## Moved from assignment_participant.rb, adjust location #
+    AssignmentParticipant.team.try(:hyperlinks) || []
+  end
+
   def self.handle_duplicate(team, name, assignment_id, handle_duplicates)
     return name if team.nil? #no duplicate
 
@@ -120,9 +125,9 @@ class AssignmentTeam < Team
     else # handle_duplicates = "insert"
       return nil
     end
-    end
+  end
 
-    def self.import(row, assignment_id, options)
+  def self.import(row, assignment_id, options)
       raise ArgumentError, "Not enough fields on this line" if (row.length < 2 && options[:has_column_names] == "true") || (row.length < 1 && options[:has_column_names] != "true")
       raise ImportError, "The assignment with id \""+assignment_id.to_s+"\" was not found. <a href='/assignment/new'>Create</a> this assignment?" if Assignment.find(assignment_id) == nil
 
@@ -139,6 +144,7 @@ class AssignmentTeam < Team
 
       # create new team for the team to be inserted
       # do not create new team if we choose 'ignore' or 'insert' duplicate teams
+      # testing
       if name
         team = AssignmentTeam.create_team_and_node(assignment_id)
         team.name = name
@@ -147,25 +153,25 @@ class AssignmentTeam < Team
 
       # insert team members into team unless team was pre-existing & we ignore duplicate teams
       team.import_team_members(index, row) if !(team_exists && options[:handle_dups] == "ignore")
-    end
+  end
 
-      def email
-        self.get_team_users.first.email
-      end
+  def email
+    self.get_team_users.first.email
+  end
 
-      def participant_type
-        "AssignmentParticipant"
-      end
+  def participant_type
+    "AssignmentParticipant"
+  end
 
-      def parent_model
+  def parent_model
         "Assignment"
-      end
+  end
 
-      def fullname
-        self.name
-      end
+  def fullname
+    self.name
+  end
 
-      def participants
+  def participants
         users = self.users
         participants = Array.new
         users.each do |user|
